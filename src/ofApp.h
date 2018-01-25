@@ -5,6 +5,25 @@
 
 const int BUFFER_SIZE = 1366;
 
+class Console{
+    public:
+        Console();
+        ~Console();
+
+        void ClearLog();
+        void AddLog(const char* fmt, ...);
+        void Draw();
+        void ExecCommand(const char* command_line);
+
+        int TextEditCallback(ImGuiTextEditCallbackData* data);
+        char                  InputBuf[256];
+        ImVector<char*>       Items;
+        bool                  ScrollToBottom;
+        ImVector<char*>       History;
+        int                   HistoryPos;  // -1: new line
+        ImVector<const char*> Commands;
+};
+
 class ofApp : public ofBaseApp{
     public:
         void setup();
@@ -26,6 +45,7 @@ class ofApp : public ofBaseApp{
     private:
         ofxImGui::Gui gui;
 
+        Console console;
         ofEasyCam camera;
         ofFbo output;
 };

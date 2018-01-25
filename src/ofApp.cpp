@@ -4,6 +4,7 @@
 void ofApp::setup(){
     ofLog() << "Running setup()";
 
+    ofSetEscapeQuitsApp(false);
     gui.setup();
 
     ofSetVerticalSync(true);
@@ -45,13 +46,21 @@ void ofApp::draw(){
                  (h - side) / 2,
                  side, side);
 
-
     gui.begin();
-    ImGui::Begin("");
+    ImGui::SetNextWindowSize(ImVec2(520,600), ImGuiSetCond_FirstUseEver);
+    ImGui::Begin("", NULL,
+                 ImGuiWindowFlags_NoTitleBar |
+                 ImGuiWindowFlags_ShowBorders);
 
-    ImGui::Text("%.3f ms/frame (%.1f FPS)",
-                1000.0f / ImGui::GetIO().Framerate,
-                ImGui::GetIO().Framerate);
+    ImGuiStyle& style = ImGui::GetStyle();
+    style.Colors[ImGuiCol_WindowBg] = ImVec4(0.1, 0.1, 0.1, 0.25);
+    style.Colors[ImGuiCol_ChildWindowBg] = ImVec4(0.1, 0.1, 0.1, 0.25);
+    style.Colors[ImGuiCol_FrameBg] = ImVec4(0.1, 0.1, 0.1, 0.25);
+
+    console.Draw();
+
+    ImGui::SameLine();
+    ImGui::Text("%.0f FPS", ImGui::GetIO().Framerate);
 
     ImGui::End();
     gui.end();
