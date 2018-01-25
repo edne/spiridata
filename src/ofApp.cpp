@@ -2,17 +2,50 @@
 
 //--------------------------------------------------------------
 void ofApp::setup(){
+    ofLog() << "Running setup()";
 
+    ofSetVerticalSync(true);
+    ofEnableDepthTest();
+    ofEnableSmoothing();
+
+    camera.setDistance(1);
+    camera.setNearClip(0.01);
 }
 
 //--------------------------------------------------------------
 void ofApp::update(){
-
 }
 
 //--------------------------------------------------------------
 void ofApp::draw(){
+    output.allocate(BUFFER_SIZE, BUFFER_SIZE, GL_RGBA);
 
+    output.begin();
+    camera.begin();
+
+    ofSetLineWidth(2);
+    ofBackground(0, 0, 0);
+
+    ofSetColor(255);
+    ofNoFill();
+
+    ofDrawBox(0.5);
+
+    camera.end();
+    output.end();
+
+    int w = ofGetWidth();
+    int h = ofGetHeight();
+    int side = max(w, h);
+
+    ofTexture texture = output.getTexture();
+    texture.draw((w - side) / 2,
+                 (h - side) / 2,
+                 side, side);
+
+    string fps = "FPS: " + ofToString(ofGetFrameRate());
+    ofSetColor(255);
+    ofDrawBitmapString(fps, 10, 20);
 }
 
 //--------------------------------------------------------------
