@@ -1,6 +1,7 @@
 #pragma once
 
 #include "ofMain.h"
+#include "ofxImGui.h"
 
 const int BUFFER_SIZE = 1366;
 
@@ -23,6 +24,8 @@ class ofApp : public ofBaseApp{
         void gotMessage(ofMessage msg);
 
     private:
+        ofxImGui::Gui gui;
+
         ofEasyCam camera;
         ofFbo output;
 };

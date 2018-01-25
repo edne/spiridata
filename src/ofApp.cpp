@@ -4,6 +4,8 @@
 void ofApp::setup(){
     ofLog() << "Running setup()";
 
+    gui.setup();
+
     ofSetVerticalSync(true);
     ofEnableDepthTest();
     ofEnableSmoothing();
@@ -43,9 +45,16 @@ void ofApp::draw(){
                  (h - side) / 2,
                  side, side);
 
-    string fps = "FPS: " + ofToString(ofGetFrameRate());
-    ofSetColor(255);
-    ofDrawBitmapString(fps, 10, 20);
+
+    gui.begin();
+    ImGui::Begin("");
+
+    ImGui::Text("%.3f ms/frame (%.1f FPS)",
+                1000.0f / ImGui::GetIO().Framerate,
+                ImGui::GetIO().Framerate);
+
+    ImGui::End();
+    gui.end();
 }
 
 //--------------------------------------------------------------
