@@ -6,6 +6,8 @@
 #include <vector>
 #include <map>
 #include <functional>
+#include <string>     // std::string, std::stof
+#include <stdexcept>  // std::invalid_argument
 
 using namespace std;
 
@@ -18,9 +20,10 @@ class Console{
 
         void log(const char* fmt, ...);
         void clear_log();
-        void Draw();
+        void draw();
 
         void add_command(const char* name, function<void(void)> action);
+        void on_float(function<void(float)>);
 
     private:
         void exec_command(const char* command_line);
@@ -34,6 +37,7 @@ class Console{
 
         vector<const char*> commands_names;
         map<string, function<void(void)>> commands_map;
+        function<void(float)> on_float_cb;
 };
 
 class ofApp : public ofBaseApp{
@@ -58,8 +62,9 @@ class ofApp : public ofBaseApp{
         ofxImGui::Gui gui;
 
         Console console;
-        vector<function<void(void)>> entities_stack;
         function<void(void)> draw_entity;
+        vector<function<void(void)>> entities_stack;
+        vector<float> float_stack;
 
         ofEasyCam camera;
         ofFbo output;

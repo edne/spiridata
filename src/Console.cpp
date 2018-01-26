@@ -15,6 +15,7 @@ Console::Console(){
             log("- %s", commands_names[i]);
     });
     */
+    on_float_cb = [](float x){};
 }
 
 Console::~Console(){
@@ -46,7 +47,11 @@ void Console::add_command(const char* name, function<void(void)> action){
     commands_map[name] = action;
 }
 
-void Console::Draw(){
+void Console::on_float(function<void(float)> f){
+    on_float_cb = f;
+}
+
+void Console::draw(){
     ImGui::BeginChild("ScrollingRegion",
                       ImVec2(0,-ImGui::GetItemsLineHeightWithSpacing()),
                       false,
@@ -93,7 +98,6 @@ void Console::Draw(){
 
             while (token != NULL){
                 exec_command(token);
-
                 token = strtok(NULL, " ");
             }
         }
@@ -113,7 +117,12 @@ void Console::exec_command(const char* name)
     if (commands_map.count(name) == 1){
         commands_map[name]();
     } else{
-        log("Unknown command: '%s'\n", name);
+        try{
+            float x = stof(name, NULL);
+            on_float_cb(x);
+        } catch (const std::invalid_argument& ia){
+            log("Unknown command: '%s'\n", name);
+        }
     }
 }
 

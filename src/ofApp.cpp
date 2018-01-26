@@ -16,6 +16,10 @@ void ofApp::setup(){
 
     draw_entity = [](){};
 
+    console.on_float([=](float x){
+        float_stack.push_back(x);
+    });
+
     console.add_command("empty", [=](){
         entities_stack.push_back([=](){});
     });
@@ -24,6 +28,28 @@ void ofApp::setup(){
         entities_stack.push_back([=](){
             ofDrawBox(0.5);
         });
+    });
+
+    console.add_command("scale", [=](){
+        if (!entities_stack.empty()) {
+            if (!float_stack.empty()) {
+                function<void(void)> entity = entities_stack.back();
+                float x = float_stack.back();
+                entities_stack.pop_back();
+                float_stack.pop_back();
+
+                entities_stack.push_back([=](){
+                    ofPushMatrix();
+                    ofScale(x, x, x);
+                    entity();
+                    ofPopMatrix();
+                });
+            } else{
+                console.log("[error] Missing float argument\n");
+            }
+        } else{
+            console.log("[error] Missing entity to scale\n");
+        }
     });
 
     console.add_command(".", [=](){
@@ -77,7 +103,7 @@ void ofApp::draw(){
     style.Colors[ImGuiCol_ChildWindowBg] = ImVec4(0.1, 0.1, 0.1, 0.25);
     style.Colors[ImGuiCol_FrameBg] = ImVec4(0.1, 0.1, 0.1, 0.25);
 
-    console.Draw();
+    console.draw();
 
     ImGui::SameLine();
     ImGui::Text("%.0f FPS", ImGui::GetIO().Framerate);
