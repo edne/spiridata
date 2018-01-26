@@ -4,29 +4,33 @@
 #define IM_ARRAYSIZE(_ARR)  ((int)(sizeof(_ARR)/sizeof(*_ARR)))
 
 Console::Console(){
-    ClearLog();
+    clear_log();
     memset(InputBuf, 0, sizeof(InputBuf));
-    HistoryPos = -1;
-    Commands.push_back("HELP");
-    Commands.push_back("HISTORY");
-    Commands.push_back("CLEAR");
-    Commands.push_back("CLASSIFY");
+    history_pos = -1;
+
+    /*
+    add_command("help", [=](){
+        log("Commands:");
+        for (size_t i = 0; i < commands_names.size(); i++)
+            log("- %s", commands_names[i]);
+    });
+    */
 }
 
 Console::~Console(){
-    ClearLog();
-    for (int i = 0; i < History.Size; i++)
-        free(History[i]);
+    clear_log();
+    for (int i = 0; i < history.Size; i++)
+        free(history[i]);
 }
 
-void Console::ClearLog(){
+void Console::clear_log(){
     for (int i = 0; i < Items.Size; i++)
         free(Items[i]);
     Items.clear();
     ScrollToBottom = true;
 }
 
-void Console::AddLog(const char* fmt, ...){
+void Console::log(const char* fmt, ...){
     char buf[1024];
     va_list args;
     va_start(args, fmt);
@@ -35,6 +39,11 @@ void Console::AddLog(const char* fmt, ...){
     va_end(args);
     Items.push_back(strdup(buf));
     ScrollToBottom = true;
+}
+
+void Console::add_command(const char* name, function<void(void)> action){
+    commands_names.push_back(name);
+    commands_map[name] = action;
 }
 
 void Console::Draw(){
@@ -74,12 +83,20 @@ void Console::Draw(){
         *input_end = 0;
 
         if (InputBuf[0]){
-            const char* command_line = InputBuf;
-            AddLog("# %s\n", command_line);
+            char* command_line = InputBuf;
+            log("%s", command_line);
+            history.push_back(strdup(command_line));
+            history_pos = -1;
 
-            ExecCommand(InputBuf);
+            char *token;
+            token = strtok(command_line, " ");
+
+            while (token != NULL){
+                exec_command(token);
+
+                token = strtok(NULL, " ");
+            }
         }
-
         strcpy(InputBuf, "");
     }
 
@@ -91,22 +108,12 @@ void Console::Draw(){
         ImGui::SetKeyboardFocusHere(-1); // Auto focus previous widget
 }
 
-void Console::ExecCommand(const char* command_line)
+void Console::exec_command(const char* name)
 {
-    if (strcmp(command_line, "CLEAR") == 0){
-        ClearLog();
-    }
-    else if (strcmp(command_line, "HELP") == 0){
-        AddLog("Commands:");
-        for (int i = 0; i < Commands.Size; i++)
-            AddLog("- %s", Commands[i]);
-    }
-    else if (strcmp(command_line, "HISTORY") == 0){
-        for (int i = History.Size >= 10 ? History.Size - 10 : 0; i < History.Size; i++)
-            AddLog("%3d: %s\n", i, History[i]);
-    }
-    else{
-        AddLog("Unknown command: '%s'\n", command_line);
+    if (commands_map.count(name) == 1){
+        commands_map[name]();
+    } else{
+        log("Unknown command: '%s'\n", name);
     }
 }
 
@@ -127,14 +134,14 @@ int Console::TextEditCallback(ImGuiTextEditCallbackData* data){
 
             // Build a list of candidates
             ImVector<const char*> candidates;
-            for (int i = 0; i < Commands.Size; i++)
-                if (strncmp(Commands[i], word_start,
+            for (size_t i = 0; i < commands_names.size(); i++)
+                if (strncmp(commands_names[i], word_start,
                             (int)(word_end-word_start)) == 0)
-                    candidates.push_back(Commands[i]);
+                    candidates.push_back(commands_names[i]);
 
             if (candidates.Size == 0){
-                AddLog("No match for \"%.*s\"!\n",
-                       (int)(word_end-word_start), word_start);
+                log("No match for \"%.*s\"!\n",
+                    (int)(word_end-word_start), word_start);
             }
             else if (candidates.Size == 1){
                 // Single match. Delete the beginning of the word and
@@ -171,29 +178,29 @@ int Console::TextEditCallback(ImGuiTextEditCallbackData* data){
                 }
 
                 // List matches
-                AddLog("Possible matches:\n");
+                log("Possible matches:\n");
                 for (int i = 0; i < candidates.Size; i++)
-                    AddLog("- %s\n", candidates[i]);
+                    log("- %s\n", candidates[i]);
             }
 
             break;
         }
         case ImGuiInputTextFlags_CallbackHistory:{
-            const int prev_history_pos = HistoryPos;
+            const int prev_history_pos = history_pos;
             if (data->EventKey == ImGuiKey_UpArrow){
-                if (HistoryPos == -1)
-                    HistoryPos = History.Size - 1;
-                else if (HistoryPos > 0)
-                    HistoryPos--;
+                if (history_pos == -1)
+                    history_pos = history.Size - 1;
+                else if (history_pos > 0)
+                    history_pos--;
             }
             else if (data->EventKey == ImGuiKey_DownArrow){
-                if (HistoryPos != -1)
-                    if (++HistoryPos >= History.Size)
-                        HistoryPos = -1;
+                if (history_pos != -1)
+                    if (++history_pos >= history.Size)
+                        history_pos = -1;
             }
-            if (prev_history_pos != HistoryPos){
+            if (prev_history_pos != history_pos){
                 int pos = snprintf(data->Buf, (size_t)data->BufSize,
-                                   "%s", (HistoryPos >= 0) ? History[HistoryPos] : "");
+                                   "%s", (history_pos >= 0) ? history[history_pos] : "");
                 data->CursorPos = data->SelectionStart =
                                   data->SelectionEnd =
                                   data->BufTextLen = pos;

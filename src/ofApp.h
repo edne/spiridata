@@ -3,6 +3,12 @@
 #include "ofMain.h"
 #include "ofxImGui.h"
 
+#include <vector>
+#include <map>
+#include <functional>
+
+using namespace std;
+
 const int BUFFER_SIZE = 1366;
 
 class Console{
@@ -10,18 +16,24 @@ class Console{
         Console();
         ~Console();
 
-        void ClearLog();
-        void AddLog(const char* fmt, ...);
+        void log(const char* fmt, ...);
+        void clear_log();
         void Draw();
-        void ExecCommand(const char* command_line);
+
+        void add_command(const char* name, function<void(void)> action);
+
+    private:
+        void exec_command(const char* command_line);
 
         int TextEditCallback(ImGuiTextEditCallbackData* data);
         char                  InputBuf[256];
         ImVector<char*>       Items;
         bool                  ScrollToBottom;
-        ImVector<char*>       History;
-        int                   HistoryPos;  // -1: new line
-        ImVector<const char*> Commands;
+        ImVector<char*>       history;
+        int                   history_pos;  // -1: new line
+
+        vector<const char*> commands_names;
+        map<string, function<void(void)>> commands_map;
 };
 
 class ofApp : public ofBaseApp{
@@ -46,6 +58,9 @@ class ofApp : public ofBaseApp{
         ofxImGui::Gui gui;
 
         Console console;
+        vector<function<void(void)>> entities_stack;
+        function<void(void)> draw_entity;
+
         ofEasyCam camera;
         ofFbo output;
 };

@@ -13,6 +13,25 @@ void ofApp::setup(){
 
     camera.setDistance(1);
     camera.setNearClip(0.01);
+
+    draw_entity = [](){};
+
+    console.add_command("empty", [=](){
+        entities_stack.push_back([=](){});
+    });
+
+    console.add_command("cube", [=](){
+        entities_stack.push_back([=](){
+            ofDrawBox(0.5);
+        });
+    });
+
+    console.add_command(".", [=](){
+        if (!entities_stack.empty()) {
+            draw_entity = entities_stack.back();
+            entities_stack.pop_back();
+        }
+    });
 }
 
 //--------------------------------------------------------------
@@ -32,7 +51,8 @@ void ofApp::draw(){
     ofSetColor(255);
     ofNoFill();
 
-    ofDrawBox(0.5);
+    //ofDrawBox(0.5);
+    draw_entity();
 
     camera.end();
     output.end();
