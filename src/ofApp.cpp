@@ -1,5 +1,35 @@
 #include "ofApp.h"
 
+Entity ofApp::pop_entity(){
+    if (!entities_stack.empty()) {
+        Entity entity = entities_stack.back();
+        entities_stack.pop_back();
+        return entity;
+    } else{
+        console.log("[error] Missing entity argument");
+        throw exception();
+    }
+}
+
+float ofApp::pop_float(){
+    if (!float_stack.empty()) {
+        float x = float_stack.back();
+        float_stack.pop_back();
+        return x;
+    } else{
+        console.log("[error] Missing float argument");
+        throw exception();
+    }
+}
+
+void ofApp::push_entity(Entity entity){
+    entities_stack.push_back(entity);
+}
+
+void ofApp::push_float(float x){
+    float_stack.push_back(x);
+}
+
 //--------------------------------------------------------------
 void ofApp::setup(){
     ofLog() << "Running setup()";
@@ -17,46 +47,37 @@ void ofApp::setup(){
     draw_entity = [](){};
 
     console.on_float([=](float x){
-        float_stack.push_back(x);
+        push_float(x);
     });
 
     console.add_command("empty", [=](){
-        entities_stack.push_back([=](){});
+        push_entity([=](){});
     });
 
     console.add_command("cube", [=](){
-        entities_stack.push_back([=](){
+        push_entity([=](){
             ofDrawBox(0.5);
         });
     });
 
     console.add_command("scale", [=](){
-        if (!entities_stack.empty()) {
-            if (!float_stack.empty()) {
-                function<void(void)> entity = entities_stack.back();
-                float x = float_stack.back();
-                entities_stack.pop_back();
-                float_stack.pop_back();
+        try{
+            Entity entity = pop_entity();
+            float x = pop_float();
 
-                entities_stack.push_back([=](){
-                    ofPushMatrix();
-                    ofScale(x, x, x);
-                    entity();
-                    ofPopMatrix();
-                });
-            } else{
-                console.log("[error] Missing float argument\n");
-            }
-        } else{
-            console.log("[error] Missing entity to scale\n");
-        }
+            push_entity([=](){
+                ofPushMatrix();
+                ofScale(x, x, x);
+                entity();
+                ofPopMatrix();
+            });
+        } catch(exception e){}
     });
 
     console.add_command(".", [=](){
-        if (!entities_stack.empty()) {
-            draw_entity = entities_stack.back();
-            entities_stack.pop_back();
-        }
+        try{
+            draw_entity = pop_entity();
+        } catch(exception e){}
     });
 }
 

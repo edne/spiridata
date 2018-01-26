@@ -11,6 +11,8 @@
 
 using namespace std;
 
+typedef function<void(void)> Entity;
+
 const int BUFFER_SIZE = 1366;
 
 class Console{
@@ -42,6 +44,11 @@ class Console{
 
 class ofApp : public ofBaseApp{
     public:
+        Entity pop_entity();
+        float pop_float();
+        void push_entity(Entity entity);
+        void push_float(float x);
+
         void setup();
         void update();
         void draw();
@@ -62,9 +69,9 @@ class ofApp : public ofBaseApp{
         ofxImGui::Gui gui;
 
         Console console;
-        function<void(void)> draw_entity;
-        vector<function<void(void)>> entities_stack;
-        vector<float> float_stack;
+        Entity draw_entity;
+        vector<Entity> entities_stack;
+        vector<float>  float_stack;
 
         ofEasyCam camera;
         ofFbo output;
