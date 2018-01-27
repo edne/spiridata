@@ -49,6 +49,8 @@ class ofApp : public ofBaseApp{
         void push_entity(Entity entity);
         void push_float(float x);
 
+        void draw_fbo(string name);
+
         void setup();
         void update();
         void draw();
@@ -73,6 +75,7 @@ class ofApp : public ofBaseApp{
         vector<Entity> entities_stack;
         vector<float>  float_stack;
 
+        map<string, ofFbo> fbo_map;
+
         ofEasyCam camera;
-        ofFbo output;
 };

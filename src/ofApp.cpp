@@ -30,6 +30,19 @@ void ofApp::push_float(float x){
     float_stack.push_back(x);
 }
 
+void ofApp::draw_fbo(string name){
+    if (fbo_map.count(name) == 1){
+        int w = ofGetWidth();
+        int h = ofGetHeight();
+        int side = max(w, h);
+
+        ofTexture texture = fbo_map[name].getTexture();
+        texture.draw((w - side) / 2,
+                     (h - side) / 2,
+                     side, side);
+    }
+}
+
 //--------------------------------------------------------------
 void ofApp::setup(){
     ofLog() << "Running setup()";
@@ -43,6 +56,9 @@ void ofApp::setup(){
 
     camera.setDistance(1);
     camera.setNearClip(0.01);
+
+    ofFbo master;
+    fbo_map[":master"] = master;
 
     draw_entity = [](){};
 
@@ -87,9 +103,9 @@ void ofApp::update(){
 
 //--------------------------------------------------------------
 void ofApp::draw(){
-    output.allocate(BUFFER_SIZE, BUFFER_SIZE, GL_RGBA);
+    fbo_map[":master"].allocate(BUFFER_SIZE, BUFFER_SIZE, GL_RGBA);
 
-    output.begin();
+    fbo_map[":master"].begin();
     camera.begin();
 
     ofSetLineWidth(2);
@@ -98,22 +114,14 @@ void ofApp::draw(){
     ofSetColor(255);
     ofNoFill();
 
-    //ofDrawBox(0.5);
     draw_entity();
 
     camera.end();
-    output.end();
+    fbo_map[":master"].end();
 
-    int w = ofGetWidth();
-    int h = ofGetHeight();
-    int side = max(w, h);
-
-    ofTexture texture = output.getTexture();
-    texture.draw((w - side) / 2,
-                 (h - side) / 2,
-                 side, side);
-
+    draw_fbo(":master");
     gui.begin();
+
     ImGui::SetNextWindowSize(ImVec2(520,600), ImGuiSetCond_FirstUseEver);
     ImGui::Begin("", NULL,
                  ImGuiWindowFlags_NoTitleBar |
