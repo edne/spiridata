@@ -26,6 +26,7 @@ class Console{
 
         void add_command(const char* name, function<void(void)> action);
         void on_float(function<void(float)>);
+        void on_symbol(function<void(string)>);
 
     private:
         void exec_command(const char* command_line);
@@ -40,15 +41,20 @@ class Console{
         vector<const char*> commands_names;
         map<string, function<void(void)>> commands_map;
         function<void(float)> on_float_cb;
+        function<void(string)> on_symbol_cb;
 };
 
 class ofApp : public ofBaseApp{
     public:
         Entity pop_entity();
         float pop_float();
+        string pop_sybmol();
+
         void push_entity(Entity entity);
         void push_float(float x);
+        void push_symbol(string s);
 
+        void on_fbo(string name, Entity e);
         void draw_fbo(string name);
 
         void setup();
@@ -74,6 +80,7 @@ class ofApp : public ofBaseApp{
         Entity draw_entity;
         vector<Entity> entities_stack;
         vector<float>  float_stack;
+        vector<string> symbols_stack;
 
         map<string, ofFbo> fbo_map;
 

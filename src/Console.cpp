@@ -16,6 +16,7 @@ Console::Console(){
     });
     */
     on_float_cb = [](float x){};
+    on_symbol_cb = [](string s){};
 }
 
 Console::~Console(){
@@ -49,6 +50,10 @@ void Console::add_command(const char* name, function<void(void)> action){
 
 void Console::on_float(function<void(float)> f){
     on_float_cb = f;
+}
+
+void Console::on_symbol(function<void(string)> f){
+    on_symbol_cb = f;
 }
 
 void Console::draw(){
@@ -116,6 +121,8 @@ void Console::exec_command(const char* name)
 {
     if (commands_map.count(name) == 1){
         commands_map[name]();
+    } else if (name[0] == ':'){
+        on_symbol_cb(name);
     } else{
         try{
             float x = stof(name, NULL);

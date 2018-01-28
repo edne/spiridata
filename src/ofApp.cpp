@@ -11,13 +11,24 @@ Entity ofApp::pop_entity(){
     }
 }
 
+string ofApp::pop_sybmol(){
+    if (!symbols_stack.empty()) {
+        string s = symbols_stack.back();
+        symbols_stack.pop_back();
+        return s;
+    } else{
+        console.log("[error] Missing symbol argument");
+        throw exception();
+    }
+}
+
 float ofApp::pop_float(){
     if (!float_stack.empty()) {
         float x = float_stack.back();
         float_stack.pop_back();
         return x;
     } else{
-        console.log("[error] Missing float argument");
+        console.log("[error] Missing number argument");
         throw exception();
     }
 }
@@ -30,17 +41,30 @@ void ofApp::push_float(float x){
     float_stack.push_back(x);
 }
 
-void ofApp::draw_fbo(string name){
-    if (fbo_map.count(name) == 1){
-        int w = ofGetWidth();
-        int h = ofGetHeight();
-        int side = max(w, h);
+void ofApp::push_symbol(string s){
+    symbols_stack.push_back(s);
+}
 
-        ofTexture texture = fbo_map[name].getTexture();
-        texture.draw((w - side) / 2,
-                     (h - side) / 2,
-                     side, side);
-    }
+void ofApp::on_fbo(string name, Entity e){
+    fbo_map[name].begin();
+
+    glPushAttrib(GL_ALL_ATTRIB_BITS);
+    glEnable(GL_BLEND);
+    glBlendFuncSeparate(GL_SRC_ALPHA,
+                        GL_ONE_MINUS_SRC_ALPHA,
+                        GL_ONE,
+                        GL_ONE_MINUS_SRC_ALPHA);
+
+    ofClear(255,255,255, 0);
+    ofSetColor(255);
+    ofNoFill();
+    ofSetLineWidth(2);
+
+    e();
+
+    glDisable(GL_BLEND);
+    glPopAttrib();
+    fbo_map[name].end();
 }
 
 //--------------------------------------------------------------
@@ -64,6 +88,10 @@ void ofApp::setup(){
 
     console.on_float([=](float x){
         push_float(x);
+    });
+
+    console.on_symbol([=](string s){
+        push_symbol(s);
     });
 
     console.add_command("empty", [=](){
@@ -90,6 +118,56 @@ void ofApp::setup(){
         } catch(exception e){}
     });
 
+    console.add_command("to", [=](){
+        try{
+            Entity entity = pop_entity();
+            string name = pop_sybmol();
+            if (fbo_map.count(name) == 0){
+                ofFbo layer;
+                fbo_map[name] = layer;
+                fbo_map[name].allocate(BUFFER_SIZE, BUFFER_SIZE, GL_RGBA);
+            }
+
+            push_entity([=](){
+                on_fbo(name, [=](){
+                    static ofEasyCam camera;
+                    //camera.disableMouseInput();
+                    camera.setDistance(1);
+                    camera.setNearClip(0.01);
+
+                    camera.begin();
+                    entity();
+                    camera.end();
+                });
+            });
+        } catch(exception e){}
+    });
+
+    console.add_command("from", [=](){
+        try{
+            string name = pop_sybmol();
+            push_entity([=](){
+                ofEnableAlphaBlending();
+                if (fbo_map.count(name) != 0){
+                    fbo_map[name].getTexture().draw(-0.5, -0.5, 1, 1);
+                }
+                ofDisableAlphaBlending();
+            });
+        } catch(exception e){}
+    });
+
+    console.add_command("]", [=](){
+        try{
+            Entity e1 = pop_entity();
+            Entity e2 = pop_entity();
+
+            push_entity([=](){
+                e1();
+                e2();
+            });
+        } catch(exception e){}
+    });
+
     console.add_command(".", [=](){
         try{
             draw_entity = pop_entity();
@@ -105,21 +183,22 @@ void ofApp::update(){
 void ofApp::draw(){
     fbo_map[":master"].allocate(BUFFER_SIZE, BUFFER_SIZE, GL_RGBA);
 
-    fbo_map[":master"].begin();
-    camera.begin();
+    on_fbo(":master", [=](){
+        ofBackground(0, 0, 0);
+        camera.begin();
+        draw_entity();
+        camera.end();
+    });
 
-    ofSetLineWidth(2);
-    ofBackground(0, 0, 0);
+    int w = ofGetWidth();
+    int h = ofGetHeight();
+    int side = max(w, h);
 
-    ofSetColor(255);
-    ofNoFill();
+    ofTexture texture = fbo_map[":master"].getTexture();
+    texture.draw((w - side) / 2,
+                 (h - side) / 2,
+                 side, side);
 
-    draw_entity();
-
-    camera.end();
-    fbo_map[":master"].end();
-
-    draw_fbo(":master");
     gui.begin();
 
     ImGui::SetNextWindowSize(ImVec2(520,600), ImGuiSetCond_FirstUseEver);
