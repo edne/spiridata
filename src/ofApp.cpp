@@ -11,6 +11,18 @@ Entity ofApp::pop_entity(){
     }
 }
 
+Numeric ofApp::pop_numeric(){
+    if (!numeric_stack.empty()) {
+        Numeric n = numeric_stack.back();
+        numeric_stack.pop_back();
+        return n;
+    } else{
+        console.log("[error] Missing numeric argument");
+        throw exception();
+    }
+}
+
+
 string ofApp::pop_sybmol(){
     if (!symbols_stack.empty()) {
         string s = symbols_stack.back();
@@ -22,23 +34,12 @@ string ofApp::pop_sybmol(){
     }
 }
 
-float ofApp::pop_float(){
-    if (!float_stack.empty()) {
-        float x = float_stack.back();
-        float_stack.pop_back();
-        return x;
-    } else{
-        console.log("[error] Missing number argument");
-        throw exception();
-    }
-}
-
 void ofApp::push_entity(Entity entity){
     entities_stack.push_back(entity);
 }
 
-void ofApp::push_float(float x){
-    float_stack.push_back(x);
+void ofApp::push_numeric(Numeric n){
+    numeric_stack.push_back(n);
 }
 
 void ofApp::push_symbol(string s){
@@ -87,11 +88,26 @@ void ofApp::setup(){
     draw_entity = [](){};
 
     console.on_float([=](float x){
-        push_float(x);
+        push_numeric([=](){return x;});
     });
 
     console.on_symbol([=](string s){
         push_symbol(s);
+    });
+
+    console.add_command("time", "", [=](){
+        push_numeric([=](){
+            return ofGetElapsedTimef();
+        });
+    });
+
+    console.add_command("sin", "", [=](){
+        try{
+            Numeric n = pop_numeric();
+            push_numeric([=](){
+                return sin(n());
+            });
+        } catch(exception e){}
     });
 
     console.add_command("cube", "", [=](){
@@ -103,11 +119,11 @@ void ofApp::setup(){
     console.add_command("scale", " \n\t e x scale", [=](){
         try{
             Entity entity = pop_entity();
-            float x = pop_float();
+            Numeric n = pop_numeric();
 
             push_entity([=](){
                 ofPushMatrix();
-                ofScale(x, x, x);
+                ofScale(n(), n(), n());
                 entity();
                 ofPopMatrix();
             });

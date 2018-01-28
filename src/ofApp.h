@@ -12,6 +12,7 @@
 using namespace std;
 
 typedef function<void(void)> Entity;
+typedef function<float(void)> Numeric;
 
 const int BUFFER_SIZE = 1366;
 
@@ -51,11 +52,11 @@ class Console{
 class ofApp : public ofBaseApp{
     public:
         Entity pop_entity();
-        float pop_float();
+        Numeric pop_numeric();
         string pop_sybmol();
 
         void push_entity(Entity entity);
-        void push_float(float x);
+        void push_numeric(Numeric n);
         void push_symbol(string s);
 
         void on_fbo(string name, Entity e);
@@ -83,7 +84,7 @@ class ofApp : public ofBaseApp{
         Console console;
         Entity draw_entity;
         vector<Entity> entities_stack;
-        vector<float>  float_stack;
+        vector<Numeric>  numeric_stack;
         vector<string> symbols_stack;
 
         map<string, ofFbo> fbo_map;
