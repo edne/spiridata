@@ -8,13 +8,6 @@ Console::Console(){
     memset(InputBuf, 0, sizeof(InputBuf));
     history_pos = -1;
 
-    /*
-    add_command("help", [=](){
-        log("Commands:");
-        for (size_t i = 0; i < commands_names.size(); i++)
-            log("- %s", commands_names[i]);
-    });
-    */
     on_float_cb = [](float x){};
     on_symbol_cb = [](string s){};
 }
@@ -38,14 +31,19 @@ void Console::log(const char* fmt, ...){
     va_start(args, fmt);
     vsnprintf(buf, IM_ARRAYSIZE(buf), fmt, args);
     buf[IM_ARRAYSIZE(buf)-1] = 0;
+    printf("%s", buf);
     va_end(args);
     Items.push_back(strdup(buf));
     ScrollToBottom = true;
+
 }
 
-void Console::add_command(const char* name, function<void(void)> action){
+void Console::add_command(const char *name,
+                          const char *doc,
+                          function<void(void)> action){
     commands_names.push_back(name);
     commands_map[name] = action;
+    commands_doc[name] = doc;
 }
 
 void Console::on_float(function<void(float)> f){
@@ -99,11 +97,11 @@ void Console::draw(){
             history_pos = -1;
 
             char *token;
-            token = strtok(command_line, " ");
+            token = strtok(command_line, " ,");
 
             while (token != NULL){
                 exec_command(token);
-                token = strtok(NULL, " ");
+                token = strtok(NULL, " ,");
             }
         }
         strcpy(InputBuf, "");
@@ -193,10 +191,15 @@ int Console::TextEditCallback(ImGuiTextEditCallbackData* data){
                                       candidates[0] + match_len);
                 }
 
-                // List matches
-                log("Possible matches:\n");
-                for (int i = 0; i < candidates.Size; i++)
-                    log("- %s\n", candidates[i]);
+                log("TAB help:\n");
+                for (int i = 0; i < candidates.Size; i++){
+                    const char *name = candidates[i];
+                    const char *doc = commands_doc[name];
+                    if (doc[0] != '\0')
+                        log("  %s  %s\n\n", name, doc);
+                    else
+                        log("  %s\n\n", name);
+                }
             }
 
             break;

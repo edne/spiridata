@@ -24,7 +24,9 @@ class Console{
         void clear_log();
         void draw();
 
-        void add_command(const char* name, function<void(void)> action);
+        void add_command(const char *name,
+                         const char *doc,
+                         function<void(void)> action);
         void on_float(function<void(float)>);
         void on_symbol(function<void(string)>);
 
@@ -40,6 +42,8 @@ class Console{
 
         vector<const char*> commands_names;
         map<string, function<void(void)>> commands_map;
+        map<string, const char*> commands_doc;
+
         function<void(float)> on_float_cb;
         function<void(string)> on_symbol_cb;
 };

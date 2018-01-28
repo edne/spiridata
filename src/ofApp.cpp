@@ -94,17 +94,13 @@ void ofApp::setup(){
         push_symbol(s);
     });
 
-    console.add_command("empty", [=](){
-        push_entity([=](){});
-    });
-
-    console.add_command("cube", [=](){
+    console.add_command("cube", "", [=](){
         push_entity([=](){
             ofDrawBox(0.5);
         });
     });
 
-    console.add_command("scale", [=](){
+    console.add_command("scale", " \n\t e x scale", [=](){
         try{
             Entity entity = pop_entity();
             float x = pop_float();
@@ -118,7 +114,7 @@ void ofApp::setup(){
         } catch(exception e){}
     });
 
-    console.add_command("to", [=](){
+    console.add_command("to", "draw to fbo \n\t e :a to", [=](){
         try{
             Entity entity = pop_entity();
             string name = pop_sybmol();
@@ -143,7 +139,7 @@ void ofApp::setup(){
         } catch(exception e){}
     });
 
-    console.add_command("from", [=](){
+    console.add_command("from", "draw from fbo \n\t :a from", [=](){
         try{
             string name = pop_sybmol();
             push_entity([=](){
@@ -156,7 +152,7 @@ void ofApp::setup(){
         } catch(exception e){}
     });
 
-    console.add_command("]", [=](){
+    console.add_command("]", "merge last two entities \n\t e1 e2 ]", [=](){
         try{
             Entity e1 = pop_entity();
             Entity e2 = pop_entity();
@@ -168,7 +164,7 @@ void ofApp::setup(){
         } catch(exception e){}
     });
 
-    console.add_command(".", [=](){
+    console.add_command(".", "draw the last entity \n\t e .", [=](){
         try{
             draw_entity = pop_entity();
         } catch(exception e){}
