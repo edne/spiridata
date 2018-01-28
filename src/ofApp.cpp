@@ -152,8 +152,8 @@ void ofApp::setup(){
         } catch(exception e){}
     });
 
-    console.add_command("]", "merge last two entities \n\t e1 e2 ]", [=](){
-        try{
+    console.add_command("]", "merge all the entities \n\t e1 e2 ... ]", [=](){
+        while (entities_stack.size() > 1){
             Entity e1 = pop_entity();
             Entity e2 = pop_entity();
 
@@ -161,7 +161,7 @@ void ofApp::setup(){
                 e1();
                 e2();
             });
-        } catch(exception e){}
+        }
     });
 
     console.add_command(".", "draw the last entity \n\t e .", [=](){
