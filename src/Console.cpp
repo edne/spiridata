@@ -10,6 +10,10 @@ Console::Console(){
 
     on_float_cb = [](float x){};
     on_symbol_cb = [](string s){};
+
+    log("Welcome to:");
+    log("SPiRiDATA, a spiridatic machine.\n");
+    log("Press TAB to help and completion, hold CTRL to move the camera\n");
 }
 
 Console::~Console(){

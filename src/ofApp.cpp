@@ -81,6 +81,7 @@ void ofApp::setup(){
 
     camera.setDistance(1);
     camera.setNearClip(0.01);
+    camera.disableMouseInput();
 
     ofFbo master;
     fbo_map[":master"] = master;
@@ -234,12 +235,16 @@ void ofApp::draw(){
 
 //--------------------------------------------------------------
 void ofApp::keyPressed(int key){
-
+    if (key == 769){  // CTRL
+        camera.enableMouseInput();
+    }
 }
 
 //--------------------------------------------------------------
 void ofApp::keyReleased(int key){
-
+    if (key == 769){  // CTRL
+        camera.disableMouseInput();
+    }
 }
 
 //--------------------------------------------------------------
