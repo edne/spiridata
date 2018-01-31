@@ -49,6 +49,16 @@ class Console{
         function<void(string)> on_symbol_cb;
 };
 
+class Slider{
+    public:
+        Slider(string name);
+        function<void(void)> draw;
+        function<float(void)> get;
+
+    private:
+        float x;
+};
+
 class ofApp : public ofBaseApp{
     public:
         Entity pop_entity();
@@ -88,6 +98,10 @@ class ofApp : public ofBaseApp{
         vector<string> symbols_stack;
 
         map<string, ofFbo> fbo_map;
+
+        map<string, Numeric> sliders_numeric;      // getters
+        vector<function<void(void)>> sliders_gui;  // draw functions
+
 
         ofEasyCam camera;
 };

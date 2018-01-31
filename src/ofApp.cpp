@@ -68,6 +68,18 @@ void ofApp::on_fbo(string name, Entity e){
     fbo_map[name].end();
 }
 
+Slider::Slider(string name){
+    x = 1;
+
+    draw = [=](){
+        ImGui::SliderFloat(name.c_str(), &(this->x), 0, 1, "%.2f");
+    };
+
+    get = [=](){
+        return this->x;
+    };
+}
+
 //--------------------------------------------------------------
 void ofApp::setup(){
     ofLog() << "Running setup()";
@@ -85,6 +97,18 @@ void ofApp::setup(){
 
     ofFbo master;
     fbo_map[":master"] = master;
+
+    console.add_command("slider", "", [=](){
+        try{
+            string name = pop_sybmol();
+            if (!sliders_numeric.count(name)){
+                Slider *s = new Slider(name);  // on the heap
+                sliders_gui.push_back(s->draw);
+                sliders_numeric[name] = s->get;
+            }
+            push_numeric(sliders_numeric[name]);
+        } catch(exception e){}
+    });
 
     draw_entity = [](){};
 
@@ -215,7 +239,7 @@ void ofApp::draw(){
     gui.begin();
 
     ImGui::SetNextWindowSize(ImVec2(520,600), ImGuiSetCond_FirstUseEver);
-    ImGui::Begin("", NULL,
+    ImGui::Begin("Console", NULL,
                  ImGuiWindowFlags_NoTitleBar |
                  ImGuiWindowFlags_ShowBorders);
 
@@ -230,6 +254,19 @@ void ofApp::draw(){
     ImGui::Text("%.0f FPS", ImGui::GetIO().Framerate);
 
     ImGui::End();
+
+    ImGui::SetNextWindowSize(ImVec2(200, 100), ImGuiSetCond_FirstUseEver);
+    ImGui::Begin("Sliders", NULL,
+                 ImGuiWindowFlags_NoTitleBar |
+                 ImGuiWindowFlags_ShowBorders);
+
+
+    for (size_t i = 0; i < sliders_gui.size(); i++){
+        sliders_gui[i]();  // draw the slider
+    }
+
+    ImGui::End();
+
     gui.end();
 }
 
