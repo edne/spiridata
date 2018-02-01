@@ -98,7 +98,10 @@ void ofApp::setup(){
     ofFbo master;
     fbo_map[":master"] = master;
 
-    console.add_command("slider", "", [=](){
+    console.lang = &lang;
+    lang.console = &console;  // TODO pass only a logger function
+
+    lang.add_command("slider", "", [=](){
         try{
             string name = pop_sybmol();
             if (!sliders_numeric.count(name)){
@@ -112,21 +115,21 @@ void ofApp::setup(){
 
     draw_entity = [](){};
 
-    console.on_float([=](float x){
+    lang.on_float([=](float x){
         push_numeric([=](){return x;});
     });
 
-    console.on_symbol([=](string s){
+    lang.on_symbol([=](string s){
         push_symbol(s);
     });
 
-    console.add_command("time", "", [=](){
+    lang.add_command("time", "", [=](){
         push_numeric([=](){
             return ofGetElapsedTimef();
         });
     });
 
-    console.add_command("sin", "", [=](){
+    lang.add_command("sin", "", [=](){
         try{
             Numeric n = pop_numeric();
             push_numeric([=](){
@@ -135,13 +138,13 @@ void ofApp::setup(){
         } catch(exception e){}
     });
 
-    console.add_command("cube", "", [=](){
+    lang.add_command("cube", "", [=](){
         push_entity([=](){
             ofDrawBox(0.5);
         });
     });
 
-    console.add_command("scale", " \n\t e x scale", [=](){
+    lang.add_command("scale", " \n\t e x scale", [=](){
         try{
             Entity entity = pop_entity();
             Numeric n = pop_numeric();
@@ -155,7 +158,7 @@ void ofApp::setup(){
         } catch(exception e){}
     });
 
-    console.add_command("to", "draw to fbo \n\t e :a to", [=](){
+    lang.add_command("to", "draw to fbo \n\t e :a to", [=](){
         try{
             Entity entity = pop_entity();
             string name = pop_sybmol();
@@ -180,7 +183,7 @@ void ofApp::setup(){
         } catch(exception e){}
     });
 
-    console.add_command("from", "draw from fbo \n\t :a from", [=](){
+    lang.add_command("from", "draw from fbo \n\t :a from", [=](){
         try{
             string name = pop_sybmol();
             push_entity([=](){
@@ -193,7 +196,7 @@ void ofApp::setup(){
         } catch(exception e){}
     });
 
-    console.add_command("]", "merge all the entities \n\t e1 e2 ... ]", [=](){
+    lang.add_command("]", "merge all the entities \n\t e1 e2 ... ]", [=](){
         while (entities_stack.size() > 1){
             Entity e1 = pop_entity();
             Entity e2 = pop_entity();
@@ -205,7 +208,7 @@ void ofApp::setup(){
         }
     });
 
-    console.add_command(".", "draw the last entity \n\t e .", [=](){
+    lang.add_command(".", "draw the last entity \n\t e .", [=](){
         try{
             draw_entity = pop_entity();
         } catch(exception e){}

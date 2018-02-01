@@ -8,9 +8,6 @@ Console::Console(){
     memset(InputBuf, 0, sizeof(InputBuf));
     history_pos = -1;
 
-    on_float_cb = [](float x){};
-    on_symbol_cb = [](string s){};
-
     log("Welcome to:");
     log("SPiRiDATA, a spiridatic machine.\n");
     log("Press TAB to help and completion, hold CTRL to move the camera\n");
@@ -35,27 +32,11 @@ void Console::log(const char* fmt, ...){
     va_start(args, fmt);
     vsnprintf(buf, IM_ARRAYSIZE(buf), fmt, args);
     buf[IM_ARRAYSIZE(buf)-1] = 0;
-    printf("%s", buf);
+    printf("%s\n", buf);
     va_end(args);
     Items.push_back(strdup(buf));
     ScrollToBottom = true;
 
-}
-
-void Console::add_command(const char *name,
-                          const char *doc,
-                          function<void(void)> action){
-    commands_names.push_back(name);
-    commands_map[name] = action;
-    commands_doc[name] = doc;
-}
-
-void Console::on_float(function<void(float)> f){
-    on_float_cb = f;
-}
-
-void Console::on_symbol(function<void(string)> f){
-    on_symbol_cb = f;
 }
 
 void Console::draw(){
@@ -95,18 +76,11 @@ void Console::draw(){
         *input_end = 0;
 
         if (InputBuf[0]){
-            char* command_line = InputBuf;
-            log("%s", command_line);
-            history.push_back(strdup(command_line));
+            history.push_back(strdup(InputBuf));
             history_pos = -1;
 
-            char *token;
-            token = strtok(command_line, " ,");
-
-            while (token != NULL){
-                exec_command(token);
-                token = strtok(NULL, " ,");
-            }
+            log("%s", InputBuf);
+            lang->eval(InputBuf);
         }
         strcpy(InputBuf, "");
     }
@@ -117,22 +91,6 @@ void Console::draw(){
          !ImGui::IsAnyItemActive() &&
          !ImGui::IsMouseClicked(0)))
         ImGui::SetKeyboardFocusHere(-1); // Auto focus previous widget
-}
-
-void Console::exec_command(const char* name)
-{
-    if (commands_map.count(name) == 1){
-        commands_map[name]();
-    } else if (name[0] == ':'){
-        on_symbol_cb(name);
-    } else{
-        try{
-            float x = stof(name, NULL);
-            on_float_cb(x);
-        } catch (const std::invalid_argument& ia){
-            log("Unknown command: '%s'\n", name);
-        }
-    }
 }
 
 int Console::TextEditCallback(ImGuiTextEditCallbackData* data){
@@ -152,10 +110,10 @@ int Console::TextEditCallback(ImGuiTextEditCallbackData* data){
 
             // Build a list of candidates
             ImVector<const char*> candidates;
-            for (size_t i = 0; i < commands_names.size(); i++)
-                if (strncmp(commands_names[i], word_start,
+            for (size_t i = 0; i < lang->commands_names.size(); i++)
+                if (strncmp(lang->commands_names[i], word_start,
                             (int)(word_end-word_start)) == 0)
-                    candidates.push_back(commands_names[i]);
+                    candidates.push_back(lang->commands_names[i]);
 
             if (candidates.Size == 0){
                 log("No match for \"%.*s\"!\n",
@@ -198,7 +156,7 @@ int Console::TextEditCallback(ImGuiTextEditCallbackData* data){
                 log("TAB help:\n");
                 for (int i = 0; i < candidates.Size; i++){
                     const char *name = candidates[i];
-                    const char *doc = commands_doc[name];
+                    const char *doc = lang->commands_doc[name];
                     if (doc[0] != '\0')
                         log("  %s  %s\n\n", name, doc);
                     else

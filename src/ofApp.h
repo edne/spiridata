@@ -16,6 +16,32 @@ typedef function<float(void)> Numeric;
 
 const int BUFFER_SIZE = 1366;
 
+class Console;
+
+class Lang{
+    public:
+        Lang();
+
+        void add_command(const char *name,
+                         const char *doc,
+                         function<void(void)> action);
+
+        vector<const char*> commands_names;
+        map<string, function<void(void)>> commands_map;
+        map<string, const char*> commands_doc;
+
+        void on_float(function<void(float)>);
+        void on_symbol(function<void(string)>);
+
+        void eval(char* line);
+        void exec_command(const char* command_line);
+
+        Console *console;
+
+        function<void(float)> on_float_cb;
+        function<void(string)> on_symbol_cb;
+};
+
 class Console{
     public:
         Console();
@@ -25,28 +51,15 @@ class Console{
         void clear_log();
         void draw();
 
-        void add_command(const char *name,
-                         const char *doc,
-                         function<void(void)> action);
-        void on_float(function<void(float)>);
-        void on_symbol(function<void(string)>);
+        Lang *lang;  // TODO use callbacks when possible
 
     private:
-        void exec_command(const char* command_line);
-
         int TextEditCallback(ImGuiTextEditCallbackData* data);
         char                  InputBuf[256];
         ImVector<char*>       Items;
         bool                  ScrollToBottom;
         ImVector<char*>       history;
         int                   history_pos;  // -1: new line
-
-        vector<const char*> commands_names;
-        map<string, function<void(void)>> commands_map;
-        map<string, const char*> commands_doc;
-
-        function<void(float)> on_float_cb;
-        function<void(string)> on_symbol_cb;
 };
 
 class Slider{
@@ -92,6 +105,8 @@ class ofApp : public ofBaseApp{
         ofxImGui::Gui gui;
 
         Console console;
+        Lang lang;
+
         Entity draw_entity;
         vector<Entity> entities_stack;
         vector<Numeric>  numeric_stack;
