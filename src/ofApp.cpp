@@ -68,16 +68,16 @@ void ofApp::on_fbo(string name, Entity e){
     fbo_map[name].end();
 }
 
-Slider::Slider(string name){
+Slider::Slider(){
     x = 1;
 
-    draw = [=](){
-        ImGui::SliderFloat(name.c_str(), &(this->x), 0, 1, "%.2f");
-    };
-
-    get = [=](){
+    value = [=](){
         return this->x;
     };
+}
+
+float *Slider::get_ptr(){
+    return &(this->x);
 }
 
 //--------------------------------------------------------------
@@ -104,12 +104,11 @@ void ofApp::setup(){
     lang.add_command("slider", "", [=](){
         try{
             string name = pop_sybmol();
-            if (!sliders_numeric.count(name)){
-                Slider *s = new Slider(name);  // on the heap
-                sliders_gui.push_back(s->draw);
-                sliders_numeric[name] = s->get;
+            if (sliders.count(name) == 0){
+                Slider *s = new Slider();  // on the heap
+                sliders[name] = s;
             }
-            push_numeric(sliders_numeric[name]);
+            push_numeric(sliders[name]->value);
         } catch(exception e){}
     });
 
@@ -264,8 +263,8 @@ void ofApp::draw(){
                  ImGuiWindowFlags_ShowBorders);
 
 
-    for (size_t i = 0; i < sliders_gui.size(); i++){
-        sliders_gui[i]();  // draw the slider
+    for (auto const& [name, s] : sliders){
+        ImGui::SliderFloat(name.c_str(), s->get_ptr(), 0, 1, "%.2f");
     }
 
     ImGui::End();

@@ -64,9 +64,9 @@ class Console{
 
 class Slider{
     public:
-        Slider(string name);
-        function<void(void)> draw;
-        function<float(void)> get;
+        Slider();
+        Numeric value;
+        float *get_ptr();
 
     private:
         float x;
@@ -108,14 +108,13 @@ class ofApp : public ofBaseApp{
         Lang lang;
 
         Entity draw_entity;
+
         vector<Entity> entities_stack;
         vector<Numeric>  numeric_stack;
         vector<string> symbols_stack;
 
+        map<string, Slider*> sliders;
         map<string, ofFbo> fbo_map;
-
-        map<string, Numeric> sliders_numeric;      // getters
-        vector<function<void(void)>> sliders_gui;  // draw functions
 
 
         ofEasyCam camera;
