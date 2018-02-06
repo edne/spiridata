@@ -18,13 +18,35 @@ const int BUFFER_SIZE = 1366;
 
 class Console;
 
+class Slider{
+    public:
+        Slider();
+        Numeric value;
+        float *get_ptr();
+
+    private:
+        float x;
+};
+
 class Lang{
     public:
-        Lang();
+        void setup();
+        void draw();
+
+        void on_fbo(string name, Entity e);
 
         void add_command(const char *name,
                          const char *doc,
                          function<void(void)> action);
+
+
+        Entity pop_entity();
+        Numeric pop_numeric();
+        string pop_sybmol();
+
+        void push_entity(Entity entity);
+        void push_numeric(Numeric n);
+        void push_symbol(string s);
 
         vector<const char*> commands_names;
         map<string, function<void(void)>> commands_map;
@@ -40,6 +62,16 @@ class Lang{
 
         function<void(float)> on_float_cb;
         function<void(string)> on_symbol_cb;
+
+        vector<Entity> entities_stack;
+        vector<Numeric>  numeric_stack;
+        vector<string> symbols_stack;
+
+        Entity draw_entity;
+        map<string, Slider*> sliders;
+        map<string, ofFbo> fbo_map;
+
+        ofEasyCam camera;
 };
 
 class Console{
@@ -62,29 +94,8 @@ class Console{
         int                   history_pos;  // -1: new line
 };
 
-class Slider{
-    public:
-        Slider();
-        Numeric value;
-        float *get_ptr();
-
-    private:
-        float x;
-};
-
 class ofApp : public ofBaseApp{
     public:
-        Entity pop_entity();
-        Numeric pop_numeric();
-        string pop_sybmol();
-
-        void push_entity(Entity entity);
-        void push_numeric(Numeric n);
-        void push_symbol(string s);
-
-        void on_fbo(string name, Entity e);
-        void draw_fbo(string name);
-
         void setup();
         void update();
         void draw();
@@ -106,16 +117,4 @@ class ofApp : public ofBaseApp{
 
         Console console;
         Lang lang;
-
-        Entity draw_entity;
-
-        vector<Entity> entities_stack;
-        vector<Numeric>  numeric_stack;
-        vector<string> symbols_stack;
-
-        map<string, Slider*> sliders;
-        map<string, ofFbo> fbo_map;
-
-
-        ofEasyCam camera;
 };
