@@ -40,6 +40,10 @@ class Lang{
                          function<void(void)> action);
 
 
+        void check_entity();
+        void check_numeric();
+        void check_sybmol();
+
         Entity pop_entity();
         Numeric pop_numeric();
         string pop_sybmol();

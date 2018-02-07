@@ -14,14 +14,14 @@ void Lang::setup(){
     fbo_map[":master"] = master;
 
     add_command("slider", "", [=](){
-        try{
-            string name = pop_sybmol();
-            if (sliders.count(name) == 0){
-                Slider *s = new Slider();  // on the heap
-                sliders[name] = s;
-            }
-            push_numeric(sliders[name]->value);
-        } catch(exception e){}
+        check_sybmol();
+        string name = pop_sybmol();
+
+        if (sliders.count(name) == 0){
+            Slider *s = new Slider();  // on the heap
+            sliders[name] = s;
+        }
+        push_numeric(sliders[name]->value);
     });
 
     on_float([=](float x){
@@ -39,12 +39,11 @@ void Lang::setup(){
     });
 
     add_command("sin", "", [=](){
-        try{
-            Numeric n = pop_numeric();
-            push_numeric([=](){
-                return sin(n());
-            });
-        } catch(exception e){}
+        check_numeric();
+        Numeric n = pop_numeric();
+        push_numeric([=](){
+            return sin(n());
+        });
     });
 
     add_command("cube", "", [=](){
@@ -54,55 +53,58 @@ void Lang::setup(){
     });
 
     add_command("scale", " \n\t e x scale", [=](){
-        try{
-            Entity entity = pop_entity();
-            Numeric n = pop_numeric();
+        check_entity();
+        check_numeric();
 
-            push_entity([=](){
-                ofPushMatrix();
-                ofScale(n(), n(), n());
-                entity();
-                ofPopMatrix();
-            });
-        } catch(exception e){}
+        Entity entity = pop_entity();
+        Numeric n = pop_numeric();
+
+        push_entity([=](){
+            ofPushMatrix();
+            ofScale(n(), n(), n());
+            entity();
+            ofPopMatrix();
+        });
     });
 
     add_command("to", "draw to fbo \n\t e :a to", [=](){
-        try{
-            Entity entity = pop_entity();
-            string name = pop_sybmol();
-            if (fbo_map.count(name) == 0){
-                ofFbo layer;
-                fbo_map[name] = layer;
-                fbo_map[name].allocate(BUFFER_SIZE, BUFFER_SIZE, GL_RGBA);
-            }
+        check_entity();
+        check_sybmol();
 
-            push_entity([=](){
-                on_fbo(name, [=](){
-                    static ofEasyCam camera;
-                    camera.disableMouseInput();
-                    camera.setDistance(1);
-                    camera.setNearClip(0.01);
+        Entity entity = pop_entity();
+        string name = pop_sybmol();
 
-                    camera.begin();
-                    entity();
-                    camera.end();
-                });
+        if (fbo_map.count(name) == 0){
+            ofFbo layer;
+            fbo_map[name] = layer;
+            fbo_map[name].allocate(BUFFER_SIZE, BUFFER_SIZE, GL_RGBA);
+        }
+
+        push_entity([=](){
+            on_fbo(name, [=](){
+                static ofEasyCam camera;
+                camera.disableMouseInput();
+                camera.setDistance(1);
+                camera.setNearClip(0.01);
+
+                camera.begin();
+                entity();
+                camera.end();
             });
-        } catch(exception e){}
+        });
     });
 
     add_command("from", "draw from fbo \n\t :a from", [=](){
-        try{
-            string name = pop_sybmol();
-            push_entity([=](){
-                ofEnableAlphaBlending();
-                if (fbo_map.count(name) != 0){
-                    fbo_map[name].getTexture().draw(-0.5, -0.5, 1, 1);
-                }
-                ofDisableAlphaBlending();
-            });
-        } catch(exception e){}
+        check_sybmol();
+        string name = pop_sybmol();
+
+        push_entity([=](){
+            ofEnableAlphaBlending();
+            if (fbo_map.count(name) != 0){
+                fbo_map[name].getTexture().draw(-0.5, -0.5, 1, 1);
+            }
+            ofDisableAlphaBlending();
+        });
     });
 
     add_command("]", "merge all the entities \n\t e1 e2 ... ]", [=](){
@@ -118,9 +120,8 @@ void Lang::setup(){
     });
 
     add_command(".", "draw the last entity \n\t e .", [=](){
-        try{
-            draw_entity = pop_entity();
-        } catch(exception e){}
+        check_entity();
+        draw_entity = pop_entity();
     });
 
 }
@@ -167,38 +168,44 @@ void Lang::on_fbo(string name, Entity e){
     fbo_map[name].end();
 }
 
-Entity Lang::pop_entity(){
-    if (!entities_stack.empty()) {
-        Entity entity = entities_stack.back();
-        entities_stack.pop_back();
-        return entity;
-    } else{
+void Lang::check_entity(){
+    if (entities_stack.empty()) {
         console->log("[error] Missing entity argument");
         throw exception();
     }
 }
 
-Numeric Lang::pop_numeric(){
-    if (!numeric_stack.empty()) {
-        Numeric n = numeric_stack.back();
-        numeric_stack.pop_back();
-        return n;
-    } else{
+void Lang::check_numeric(){
+    if (numeric_stack.empty()) {
         console->log("[error] Missing numeric argument");
         throw exception();
     }
 }
 
-
-string Lang::pop_sybmol(){
-    if (!symbols_stack.empty()) {
-        string s = symbols_stack.back();
-        symbols_stack.pop_back();
-        return s;
-    } else{
+void Lang::check_sybmol(){
+    if (symbols_stack.empty()) {
         console->log("[error] Missing symbol argument");
         throw exception();
     }
+}
+
+Entity Lang::pop_entity(){
+    Entity entity = entities_stack.back();
+    entities_stack.pop_back();
+    return entity;
+}
+
+Numeric Lang::pop_numeric(){
+    Numeric n = numeric_stack.back();
+    numeric_stack.pop_back();
+    return n;
+}
+
+
+string Lang::pop_sybmol(){
+    string s = symbols_stack.back();
+    symbols_stack.pop_back();
+    return s;
 }
 
 void Lang::push_entity(Entity entity){
@@ -244,7 +251,9 @@ void Lang::eval(char* command_line){
 void Lang::exec_command(const char* name)
 {
     if (commands_map.count(name) == 1){
-        commands_map[name]();
+        try{
+            commands_map[name]();
+        } catch(exception e){}
     } else if (name[0] == ':'){
         on_symbol_cb(name);
     } else{
