@@ -110,10 +110,12 @@ int Console::TextEditCallback(ImGuiTextEditCallbackData* data){
 
             // Build a list of candidates
             ImVector<const char*> candidates;
-            for (size_t i = 0; i < lang->commands_names.size(); i++)
-                if (strncmp(lang->commands_names[i], word_start,
-                            (int)(word_end-word_start)) == 0)
-                    candidates.push_back(lang->commands_names[i]);
+            for (auto const& [name, c] : lang->commands){
+                if (strncmp(name.c_str(), word_start,
+                            (int)(word_end-word_start)) == 0){
+                    candidates.push_back(name.c_str());
+                }
+            }
 
             if (candidates.Size == 0){
                 log("No match for \"%.*s\"!\n",
@@ -153,14 +155,12 @@ int Console::TextEditCallback(ImGuiTextEditCallbackData* data){
                                       candidates[0] + match_len);
                 }
 
-                log("TAB help:\n");
+                log("TAB help:");
                 for (int i = 0; i < candidates.Size; i++){
                     const char *name = candidates[i];
-                    const char *doc = lang->commands_doc[name];
-                    if (doc[0] != '\0')
-                        log("  %s  %s\n\n", name, doc);
-                    else
-                        log("  %s\n\n", name);
+                    const char *example = lang->commands[name].example.c_str();
+                    const char *doc = lang->commands[name].doc.c_str();
+                    log("%10s %30s  %s", name, doc, example);
                 }
             }
 

@@ -13,7 +13,15 @@ void Lang::setup(){
     ofFbo master;
     fbo_map[":master"] = master;
 
-    add_command("slider", "", [=](){
+    on_float([=](float x){
+        push_numeric([=](){return x;});
+    });
+
+    on_symbol([=](string s){
+        push_symbol(s);
+    });
+
+    add_command("slider", ":a slider", [=](){
         check_sybmol();
         string name = pop_sybmol();
 
@@ -24,21 +32,13 @@ void Lang::setup(){
         push_numeric(sliders[name]->value);
     });
 
-    on_float([=](float x){
-        push_numeric([=](){return x;});
-    });
-
-    on_symbol([=](string s){
-        push_symbol(s);
-    });
-
-    add_command("time", "", [=](){
+    add_command("time", [=](){
         push_numeric([=](){
             return ofGetElapsedTimef();
         });
     });
 
-    add_command("sin", "", [=](){
+    add_command("sin", "x sin", [=](){
         check_numeric();
         Numeric n = pop_numeric();
         push_numeric([=](){
@@ -46,13 +46,13 @@ void Lang::setup(){
         });
     });
 
-    add_command("cube", "", [=](){
+    add_command("cube", [=](){
         push_entity([=](){
             ofDrawBox(0.5);
         });
     });
 
-    add_command("scale", " \n\t e x scale", [=](){
+    add_command("scale", "e x scale", [=](){
         check_entity();
         check_numeric();
 
@@ -67,7 +67,7 @@ void Lang::setup(){
         });
     });
 
-    add_command("to", "draw to fbo \n\t e :a to", [=](){
+    add_command("to", "e :a to", "draw to frame buffer", [=](){
         check_entity();
         check_sybmol();
 
@@ -94,7 +94,7 @@ void Lang::setup(){
         });
     });
 
-    add_command("from", "draw from fbo \n\t :a from", [=](){
+    add_command("from", ":a from", "draw from framebuffer", [=](){
         check_sybmol();
         string name = pop_sybmol();
 
@@ -107,7 +107,7 @@ void Lang::setup(){
         });
     });
 
-    add_command("]", "merge all the entities \n\t e1 e2 ... ]", [=](){
+    add_command("]", "e1 e2 ... ]", "merge all the entities", [=](){
         while (entities_stack.size() > 1){
             Entity e1 = pop_entity();
             Entity e2 = pop_entity();
@@ -119,7 +119,7 @@ void Lang::setup(){
         }
     });
 
-    add_command(".", "draw the last entity \n\t e .", [=](){
+    add_command(".", "e .", "draw the last entity", [=](){
         check_entity();
         draw_entity = pop_entity();
     });
@@ -220,14 +220,23 @@ void Lang::push_symbol(string s){
     symbols_stack.push_back(s);
 }
 
+void Lang::add_command(string name, string example, string doc,
+                       function<void(void)> action){
+    Command cmd;
+    cmd.doc = doc;
+    cmd.example = example;
+    cmd.action = action;
+    commands[name] = cmd;
+}
 
+void Lang::add_command(string name, string example,
+                       function<void(void)> action){
+    add_command(name, example, "", action);
+}
 
-void Lang::add_command(const char *name,
-                          const char *doc,
-                          function<void(void)> action){
-    commands_names.push_back(name);
-    commands_map[name] = action;
-    commands_doc[name] = doc;
+void Lang::add_command(string name,
+                       function<void(void)> action){
+    add_command(name, "", "", action);
 }
 
 void Lang::on_float(function<void(float)> f){
@@ -250,9 +259,9 @@ void Lang::eval(char* command_line){
 
 void Lang::exec_command(const char* name)
 {
-    if (commands_map.count(name) == 1){
+    if (commands.count(name) == 1){
         try{
-            commands_map[name]();
+            commands[name].action();
         } catch(exception e){}
     } else if (name[0] == ':'){
         on_symbol_cb(name);

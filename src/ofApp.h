@@ -28,6 +28,12 @@ class Slider{
         float x;
 };
 
+struct Command{
+        string doc;
+        string example;
+        function<void(void)> action;
+};
+
 class Lang{
     public:
         void setup();
@@ -35,10 +41,14 @@ class Lang{
 
         void on_fbo(string name, Entity e);
 
-        void add_command(const char *name,
-                         const char *doc,
+        void add_command(string name, string example, string doc,
                          function<void(void)> action);
 
+        void add_command(string name, string doc,
+                         function<void(void)> action);
+
+        void add_command(string name,
+                         function<void(void)> action);
 
         void check_entity();
         void check_numeric();
@@ -52,9 +62,7 @@ class Lang{
         void push_numeric(Numeric n);
         void push_symbol(string s);
 
-        vector<const char*> commands_names;
-        map<string, function<void(void)>> commands_map;
-        map<string, const char*> commands_doc;
+        map<string, Command> commands;
 
         void on_float(function<void(float)>);
         void on_symbol(function<void(string)>);
