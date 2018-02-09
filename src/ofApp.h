@@ -39,7 +39,7 @@ class Lang{
         void setup();
         void draw();
 
-        void on_fbo(string name, Entity e);
+        void define_commands();
 
         void add_command(string name, string example, string doc,
                          function<void(void)> action);
@@ -71,6 +71,8 @@ class Lang{
         void exec_command(const char* command_line);
 
         Console *console;
+
+        void on_fbo(string name, Entity e);
 
         function<void(float)> on_float_cb;
         function<void(string)> on_symbol_cb;
