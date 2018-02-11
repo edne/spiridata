@@ -39,9 +39,13 @@ void Lang::draw(){
     int side = max(w, h);
 
     ofTexture texture = fbo_map[":master"].getTexture();
+    ofEnableAlphaBlending();
+
     texture.draw((w - side) / 2,
                  (h - side) / 2,
                  side, side);
+
+    ofDisableAlphaBlending();
 }
 
 void Lang::on_fbo(string name, Entity e){
@@ -49,6 +53,7 @@ void Lang::on_fbo(string name, Entity e){
 
     glPushAttrib(GL_ALL_ATTRIB_BITS);
     glEnable(GL_BLEND);
+
     glBlendFuncSeparate(GL_SRC_ALPHA,
                         GL_ONE_MINUS_SRC_ALPHA,
                         GL_ONE,
@@ -160,7 +165,9 @@ void Lang::exec_command(const char* name)
     if (commands.count(name) == 1){
         try{
             commands[name].action();
-        } catch(exception e){}
+        } catch(exception e){
+            console->log("[error] in command %s", name);
+        }
     } else if (name[0] == ':'){
         on_symbol_cb(name);
     } else{
