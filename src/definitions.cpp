@@ -120,8 +120,9 @@ void Lang::define_commands(){
         }
     });
 
-    add_command(".", "e .", "draw the last entity", [=](){
+    add_command(".", "e1 e2 ... .", "draw entities", [=](){
         check_entity();
+        exec_command("]");
         draw_entity = pop_entity();
     });
 }
