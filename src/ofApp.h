@@ -64,22 +64,20 @@ class Lang{
 
         map<string, Command> commands;
 
-        void on_float(function<void(float)>);
-        void on_symbol(function<void(string)>);
+        void on_float(float x);
+        void on_symbol(string s);
+        void on_definition(string s);
 
         void eval(char* line);
-        void exec_command(const char* command_line);
+        void exec_command(string command_line);
 
         Console *console;
 
         void on_fbo(string name, Entity e);
 
-        function<void(float)> on_float_cb;
-        function<void(string)> on_symbol_cb;
-
-        vector<Entity> entities_stack;
+        vector<Entity> entity_stack;
         vector<Numeric>  numeric_stack;
-        vector<string> symbols_stack;
+        vector<string> symbol_stack;
 
         Entity draw_entity;
         map<string, Slider*> sliders;

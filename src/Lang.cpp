@@ -1,9 +1,6 @@
 #include "ofApp.h"
 
 void Lang::setup(){
-    on_float_cb = [](float x){};
-    on_symbol_cb = [](string s){};
-
     draw_entity = [](){};
 
     camera.setDistance(1);
@@ -12,14 +9,6 @@ void Lang::setup(){
 
     ofFbo master;
     fbo_map[":master"] = master;
-
-    on_float([=](float x){
-        push_numeric([=](){return x;});
-    });
-
-    on_symbol([=](string s){
-        push_symbol(s);
-    });
 
     define_commands();
 }
@@ -72,7 +61,7 @@ void Lang::on_fbo(string name, Entity e){
 }
 
 void Lang::check_entity(){
-    if (entities_stack.empty()) {
+    if (entity_stack.empty()) {
         console->log("[error] Missing entity argument");
         throw exception();
     }
@@ -86,15 +75,15 @@ void Lang::check_numeric(){
 }
 
 void Lang::check_sybmol(){
-    if (symbols_stack.empty()) {
+    if (symbol_stack.empty()) {
         console->log("[error] Missing symbol argument");
         throw exception();
     }
 }
 
 Entity Lang::pop_entity(){
-    Entity entity = entities_stack.back();
-    entities_stack.pop_back();
+    Entity entity = entity_stack.back();
+    entity_stack.pop_back();
     return entity;
 }
 
@@ -106,13 +95,13 @@ Numeric Lang::pop_numeric(){
 
 
 string Lang::pop_sybmol(){
-    string s = symbols_stack.back();
-    symbols_stack.pop_back();
+    string s = symbol_stack.back();
+    symbol_stack.pop_back();
     return s;
 }
 
 void Lang::push_entity(Entity entity){
-    entities_stack.push_back(entity);
+    entity_stack.push_back(entity);
 }
 
 void Lang::push_numeric(Numeric n){
@@ -120,7 +109,7 @@ void Lang::push_numeric(Numeric n){
 }
 
 void Lang::push_symbol(string s){
-    symbols_stack.push_back(s);
+    symbol_stack.push_back(s);
 }
 
 void Lang::add_command(string name, string example, string doc,
@@ -142,12 +131,32 @@ void Lang::add_command(string name,
     add_command(name, "", "", action);
 }
 
-void Lang::on_float(function<void(float)> f){
-    on_float_cb = f;
+void Lang::on_float(float x){
+    push_numeric([=](){return x;});
 }
 
-void Lang::on_symbol(function<void(string)> f){
-    on_symbol_cb = f;
+void Lang::on_symbol(string s){
+    push_symbol(s);
+}
+
+void Lang::on_definition(string s){
+    string name = s.substr(1);
+
+    vector<Entity>  es  = entity_stack;
+    vector<Numeric> ns = numeric_stack;
+    vector<string>  ss  = symbol_stack;
+
+    entity_stack.clear();
+    numeric_stack.clear();
+    symbol_stack.clear();
+
+    add_command(name, "", "", [=](){
+        entity_stack.insert(entity_stack.end(), es.begin(), es.end());
+        numeric_stack.insert(numeric_stack.end(), ns.begin(), ns.end());
+        symbol_stack.insert(symbol_stack.end(), ss.begin(), ss.end());
+    });
+
+    console->log("[defined] %s", name.c_str());
 }
 
 void Lang::eval(char* command_line){
@@ -160,20 +169,22 @@ void Lang::eval(char* command_line){
     }
 }
 
-void Lang::exec_command(const char* name)
+void Lang::exec_command(string name)
 {
     if (commands.count(name) == 1){
         try{
             commands[name].action();
         } catch(exception e){
-            console->log("[error] in command %s", name);
+            console->log("[error] in command %s", name.c_str());
         }
     } else if (name[0] == ':'){
-        on_symbol_cb(name);
+        on_symbol(name);
+    } else if (name[0] == '@' && name.size() > 1){
+        on_definition(name);
     } else{
         try{
             float x = stof(name, NULL);
-            on_float_cb(x);
+            on_float(x);
         } catch (const std::invalid_argument& ia){
             // TODO stream logger
             ostringstream string_stream;

@@ -109,7 +109,7 @@ void Lang::define_commands(){
     });
 
     add_command("]", "e1 e2 ... ]", "merge all the entities", [=](){
-        while (entities_stack.size() > 1){
+        while (entity_stack.size() > 1){
             Entity e1 = pop_entity();
             Entity e2 = pop_entity();
 
