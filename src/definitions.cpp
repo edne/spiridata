@@ -68,6 +68,21 @@ void Lang::define_commands(){
         });
     });
 
+    add_command("rotate", "e x rotate", "angle in 0-1 range", [=](){
+        check_entity();
+        check_numeric();
+
+        Entity entity = pop_entity();
+        Numeric n = pop_numeric();
+
+        push_entity([=](){
+            ofPushMatrix();
+            ofRotate(n() * 360, 0, 0, 1);
+            entity();
+            ofPopMatrix();
+        });
+    });
+
     add_command("to", "e :a to", "draw to frame buffer", [=](){
         check_entity();
         check_sybmol();
