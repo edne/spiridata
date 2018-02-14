@@ -40,6 +40,8 @@ class Lang{
         void draw();
 
         void define_commands();
+        void def_unary_numeric(string name, function<float(float)> f);
+        void def_binary_numeric(string name, function<float(float, float)> f);
 
         void add_command(string name, string example, string doc,
                          function<void(void)> action);

@@ -1,6 +1,37 @@
 #include "ofApp.h"
 
+void Lang::def_unary_numeric(string name, function<float(float)> f){
+    add_command(name, [=](){
+        check_numeric();
+        Numeric n = pop_numeric();
+        push_numeric([=](){ return f(n()); });
+    });
+}
+
+void Lang::def_binary_numeric(string name, function<float(float, float)> f){
+    add_command(name, [=](){
+        check_numeric();
+        check_numeric();
+        Numeric n = pop_numeric();
+        Numeric m = pop_numeric();
+        push_numeric([=](){ return f(n(), m()); });
+    });
+}
+
 void Lang::define_commands(){
+    def_unary_numeric("sin", [](float x){ return sin(x); });
+    def_unary_numeric("cos", [](float x){ return cos(x); });
+    def_unary_numeric("exp", [](float x){ return exp(x); });
+    def_unary_numeric("log", [](float x){ return log(x); });
+    def_unary_numeric("abs", [](float x){ return fabs(x); });
+
+    def_binary_numeric("+", [](float x, float y){ return y+x; });
+    def_binary_numeric("-", [](float x, float y){ return y-x; });
+    def_binary_numeric("*", [](float x, float y){ return y*x; });
+    def_binary_numeric("/", [](float x, float y){ return y/x; });
+    def_binary_numeric("%", [](float x, float y){ return fmod(y, x); });
+
+
     add_command("slider", ":a slider", [=](){
         check_sybmol();
         string name = pop_sybmol();
@@ -15,14 +46,6 @@ void Lang::define_commands(){
     add_command("time", [=](){
         push_numeric([=](){
             return ofGetElapsedTimef();
-        });
-    });
-
-    add_command("sin", "x sin", [=](){
-        check_numeric();
-        Numeric n = pop_numeric();
-        push_numeric([=](){
-            return sin(n());
         });
     });
 
